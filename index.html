@@ -567,12 +567,17 @@
                     <!-- Multi-source Context Input -->
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label">1. Mô tả trực tiếp bối cảnh doanh nghiệp & bài toán phân tích (Text Prompt)</label>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                                <label class="form-label" style="margin-bottom:0;">1. Mô tả trực tiếp bối cảnh doanh nghiệp & bài toán phân tích (Text Prompt)</label>
+                                <button type="button" class="btn btn-outline" onclick="loadSampleStep1()" style="font-size:11.5px; padding:4px 12px; border-color:#2563eb; color:#2563eb; background:#f0f6ff;" title="Tự động điền bối cảnh mẫu và chạy phân tích AI ngay">
+                                    ⚡ Nạp bối cảnh mẫu (E-Commerce B2C)
+                                </button>
+                            </div>
                             <textarea id="step1-raw-text" class="form-textarea" rows="7" placeholder="Nhập ngành nghề, mô hình kinh doanh (B2B/B2C/E-commerce/F&B...), quy mô, mục tiêu phân tích cốt lõi, các câu hỏi trọng tâm và ràng buộc dữ liệu của bạn..."></textarea>
                         </div>
                         <div class="form-group">
                             <label class="form-label">2. Hoặc tải lên tài liệu bối cảnh nội bộ</label>
-                            <div class="upload-dropzone" onclick="document.getElementById('context-doc-uploader').click()">
+                            <div class="upload-dropzone" id="context-dropzone">
                                 <input type="file" id="context-doc-uploader" class="file-hidden-input" accept=".txt,.md,.json,.csv,.docx,.pdf,.pptx" onchange="handleContextDocUpload(event)">
                                 <div class="upload-arrow-circle">↑</div>
                                 <div class="upload-main-text" id="context-doc-label">Kéo thả tài liệu bối cảnh hoặc chọn tệp</div>
@@ -585,12 +590,15 @@
                                     <span class="ext-tag">.pptx</span>
                                     <span class="ext-tag">.json</span>
                                 </div>
-                                <button type="button" class="btn-choose-file" onclick="event.stopPropagation(); document.getElementById('context-doc-uploader').click()">Chọn tệp từ máy tính</button>
+                                <button type="button" class="btn-choose-file" style="pointer-events:none;">Chọn tệp từ máy tính</button>
                             </div>
                         </div>
                     </div>
 
-                    <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:20px;">
+                        <button type="button" class="btn btn-outline" onclick="skipToStep2()" style="font-size:12.5px; padding:9px 18px; color:#2563eb; border-color:#93c5fd;" title="Đi thẳng đến Bước 2 để tải file dữ liệu Excel/CSV">
+                            ⏭ Bỏ qua bối cảnh & Mở khóa Bước 2 (Nhập file dữ liệu)
+                        </button>
                         <button class="btn btn-primary" onclick="analyzeStep1Context()">
                             Phân Tích & Xuất Hồ Sơ Bối Cảnh Doanh Nghiệp →
                         </button>
@@ -689,8 +697,14 @@
                     <div class="upload-dropzone" id="dropzone">
                         <input type="file" id="file-uploader" class="file-hidden-input" accept=".csv, .xlsx, .xls, .json" onchange="handleDataFileSelected(event)">
                         <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                        <div class="upload-main-text">Kéo & Thả file dữ liệu (.xlsx, .xls, .csv, .json) vào đây hoặc <span style="color:var(--brand-green); text-decoration:underline;">chọn file từ máy tính</span></div>
+                        <div class="upload-main-text">Kéo & Thả file dữ liệu (.xlsx, .xls, .csv, .json) vào đây hoặc <span style="color:#2563eb; text-decoration:underline;">chọn file từ máy tính</span></div>
                         <div class="upload-sub-text">Tự động nhận diện danh sách cột mới hoàn toàn từ dòng tiêu đề đầu tiên (Header Row)</div>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; justify-content:center; gap:10px;">
+                        <button type="button" class="btn btn-outline" onclick="loadSampleStep2Data()" style="font-size:12.5px; padding:8px 20px; border-color:#2563eb; color:#2563eb; background:#f0f6ff;" title="Nạp nhanh bộ dữ liệu kinh doanh 200 đơn hàng thực tế để kiểm tra ngay toàn bộ Bước 2, 3, 4, 5">
+                            ⚡ Nạp nhanh Dữ liệu Kinh doanh Mẫu (200 đơn hàng Đa Kênh)
+                        </button>
                     </div>
                 </div>
 
@@ -1438,7 +1452,11 @@
         // =====================================================================
         function tryNavigateStep(step) {
             if (step > unlockedStep) {
-                alert(`⚠️ [TRẠM KIỂM SOÁT]: Bước ${step} hiện đang bị KHÓA. Bạn bắt buộc phải hoàn thành và xác nhận Bước ${step - 1} trước!`);
+                const wantUnlock = confirm(`Bước ${step} chưa được mở khóa theo tiến trình tuần tự. Bạn có muốn MỞ KHÓA NHANH để xem và thao tác Bước ${step} ngay không?`);
+                if (wantUnlock) {
+                    unlockedStep = Math.max(unlockedStep, step);
+                    goToStep(step);
+                }
                 return;
             }
             goToStep(step);
@@ -1492,14 +1510,14 @@
             const inp = document.getElementById(`gate-input-${stepNum}`);
             if (!inp) return;
             const val = inp.value.trim().toLowerCase();
-            if (['xác nhận', 'xac nhan', 'tiếp tục', 'tiep tuc', 'đúng', 'dung', 'ok', 'yes', '동의'].some(k => val.includes(k))) {
+            if (['xác nhận', 'xac nhan', 'tiếp tục', 'tiep tuc', 'đúng', 'dung', 'ok', 'yes', 'đồng ý'].some(k => val.includes(k))) {
                 inp.value = '';
                 if (stepNum === 1) confirmStep1();
                 else if (stepNum === 2) confirmStep2();
                 else if (stepNum === 3) confirmStep3();
                 else if (stepNum === 4) confirmStep4();
             } else {
-                alert("Để qua Trạm kiểm soát, vui lòng gõ 'Xác nhận' hoặc 'Tiếp tục', hoặc bấm vào nút Xác nhận màu xanh.");
+                alert("Để qua Trạm kiểm soát, vui lòng gõ 'Xác nhận' hoặc 'Tiếp tục', hoặc bấm vào nút Xác nhận.");
             }
         }
 
@@ -1508,9 +1526,13 @@
         // =====================================================================
         function handleContextDocUpload(event) {
             const file = event.target.files[0];
-            if (!file) return;
+            if (file) handleContextDocFile(file);
+        }
+
+        function handleContextDocFile(file) {
             uploadedContextDocName = file.name;
-            document.getElementById('context-doc-label').innerText = `Đã đính kèm: ${file.name}`;
+            const lbl = document.getElementById('context-doc-label');
+            if (lbl) lbl.innerText = `Đã đính kèm: ${file.name}`;
 
             const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
             const reader = new FileReader();
@@ -1520,7 +1542,6 @@
                 };
                 reader.readAsText(file);
             } else {
-                // Trích xuất chuỗi văn bản khả dụng từ file nhị phân (.docx/.pdf/.pptx)
                 reader.onload = (e) => {
                     const bytes = new Uint8Array(e.target.result);
                     const decoder = new TextDecoder('utf-8', { fatal: false });
@@ -1534,6 +1555,19 @@
                 };
                 reader.readAsArrayBuffer(file);
             }
+        }
+
+        function loadSampleStep1() {
+            document.getElementById('step1-raw-text').value = "Doanh nghiệp thời trang trực tuyến B2C (thương hiệu UrbanStyle). Mô hình bán lẻ số đa kênh qua TikTok Shop, Facebook Ads, Shopee và Zalo OA. Quy mô: 5.000 đơn hàng/tháng, doanh thu trung bình 300 triệu VNĐ/tháng. Mục tiêu phân tích cốt lõi: Phân tích hiệu quả kinh doanh các kênh, tìm nguyên nhân tỷ lệ hoàn đơn hàng cao ở một số kênh bán, đánh giá ROAS và đóng góp lợi nhuận ròng sau khi trừ chi phí ads và giá vốn hàng bán (COGS).";
+            analyzeStep1Context();
+        }
+
+        async function skipToStep2() {
+            if (!document.getElementById('step1-raw-text').value.trim()) {
+                document.getElementById('step1-raw-text').value = "Doanh nghiệp kinh doanh bán lẻ số đa kênh (E-commerce / B2C).";
+            }
+            await analyzeStep1Context();
+            await confirmStep1();
         }
 
         async function analyzeStep1Context() {
@@ -1644,17 +1678,80 @@
         // BƯỚC 2: DYNAMIC FILE UPLOAD & DATA PROFILING
         // =====================================================================
         function setupDragAndDrop() {
+            // Dropzone Bước 2 (Dữ liệu bảng)
             const dropzone = document.getElementById('dropzone');
-            if (!dropzone) return;
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
-                dropzone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-            });
-            ['dragenter', 'dragover'].forEach(ev => dropzone.addEventListener(ev, () => dropzone.classList.add('dragover'), false));
-            ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, () => dropzone.classList.remove('dragover'), false));
-            dropzone.addEventListener('drop', (e) => {
-                const files = e.dataTransfer.files;
-                if (files && files.length > 0) processDataFile(files[0]);
-            });
+            if (dropzone) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+                    dropzone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+                });
+                ['dragenter', 'dragover'].forEach(ev => dropzone.addEventListener(ev, () => dropzone.classList.add('dragover'), false));
+                ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, () => dropzone.classList.remove('dragover'), false));
+                dropzone.addEventListener('drop', (e) => {
+                    const files = e.dataTransfer.files;
+                    if (files && files.length > 0) processDataFile(files[0]);
+                });
+            }
+
+            // Dropzone Bước 1 (Tài liệu bối cảnh)
+            const ctxDropzone = document.getElementById('context-dropzone');
+            if (ctxDropzone) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+                    ctxDropzone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+                });
+                ['dragenter', 'dragover'].forEach(ev => ctxDropzone.addEventListener(ev, () => ctxDropzone.classList.add('dragover'), false));
+                ['dragleave', 'drop'].forEach(ev => ctxDropzone.addEventListener(ev, () => ctxDropzone.classList.remove('dragover'), false));
+                ctxDropzone.addEventListener('drop', (e) => {
+                    const files = e.dataTransfer.files;
+                    if (files && files.length > 0) handleContextDocFile(files[0]);
+                });
+            }
+        }
+
+        function loadSampleStep2Data() {
+            const channels = ['TikTok Shop', 'Facebook Ads', 'Shopee', 'Zalo OA'];
+            const campaigns = ['Summer Mega Sale', 'Flash Deal 50%', 'BST Mới Thu Đông', 'Remarketing Khách Cũ'];
+            const categories = ['Áo Thun Cotton', 'Đầm Váy Thiết Kế', 'Quần Jean Slimfit', 'Phụ Kiện Thời Trang'];
+            const regions = ['Miền Bắc', 'Miền Trung', 'Miền Nam'];
+
+            const sampleRows = [];
+            const startDate = new Date(2025, 6, 1); // 01/07/2025
+
+            for (let i = 0; i < 200; i++) {
+                const curDate = new Date(startDate.getTime() + (i % 30) * 86400000);
+                const dateStr = curDate.toISOString().split('T')[0];
+                const ch = channels[i % channels.length];
+                const camp = campaigns[i % campaigns.length];
+                const cat = categories[i % categories.length];
+                const reg = regions[i % regions.length];
+
+                const orders = Math.floor(Math.random() * 40) + 10;
+                const unitPrice = [180000, 250000, 320000, 450000][i % 4];
+                const revenue = orders * unitPrice;
+                const adRate = ch === 'TikTok Shop' ? 0.22 : ch === 'Facebook Ads' ? 0.28 : ch === 'Shopee' ? 0.15 : 0.12;
+                const cost = Math.round(revenue * adRate);
+                const cogs = Math.round(revenue * 0.40);
+                const returned = Math.floor(orders * (ch === 'TikTok Shop' ? 0.08 : 0.04));
+
+                sampleRows.push({
+                    "Ngày": dateStr,
+                    "Kênh Bán": ch,
+                    "Chiến Dịch": camp,
+                    "Ngành Hàng": cat,
+                    "Khu Vực": reg,
+                    "Số Lượng Đơn": orders,
+                    "Doanh Thu (VNĐ)": revenue,
+                    "Chi Phí Ads (VNĐ)": cost,
+                    "Giá Vốn COGS (VNĐ)": cogs,
+                    "Đơn Hoàn Trả": returned
+                });
+            }
+
+            // Thêm 2 dòng trùng lặp và 2 dòng trống để test tính năng làm sạch dữ liệu
+            sampleRows.push({ ...sampleRows[0] });
+            sampleRows.push({ ...sampleRows[1] });
+            sampleRows[10]["Chi Phí Ads (VNĐ)"] = ""; // Missing value
+
+            uploadDataRows("Du_Lieu_Ban_Hang_Da_Kenh_Mau.xlsx", sampleRows);
         }
 
         function handleDataFileSelected(event) {
@@ -2363,8 +2460,8 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, title: { display: true, text: 'ROAS (x) hoặc AOV (Nghìn)', color: '#94a3b8' } },
-                            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, title: { display: true, text: 'Biên Lợi Nhuận Ròng (%)', color: '#94a3b8' } }
+                            x: { grid: { color: 'rgba(0, 0, 0, 0.05)' }, ticks: { color: '#64748b' }, title: { display: true, text: 'ROAS (x) hoặc AOV (Nghìn)', color: '#64748b' } },
+                            y: { grid: { color: 'rgba(0, 0, 0, 0.05)' }, ticks: { color: '#64748b' }, title: { display: true, text: 'Biên Lợi Nhuận Ròng (%)', color: '#64748b' } }
                         },
                         plugins: {
                             tooltip: {
@@ -2379,6 +2476,10 @@
         }
 
         function exportCleanData(fmt) {
+            if (!pipelineData || !pipelineData.step3 || !pipelineData.step3.has_cleaned) {
+                alert("⚠️ Chưa có dữ liệu sạch để xuất. Vui lòng hoàn thành Bước 2 (Nhập dữ liệu) và Bước 3 (Làm sạch dữ liệu) trước!");
+                return;
+            }
             window.location.href = `/api/export-clean?format=${fmt || 'csv'}`;
         }
 
